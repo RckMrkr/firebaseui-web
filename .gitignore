@@ -1,10 +1,13 @@
+*
+!*/
 # Node modules.
 node_modules/
 
 # Generated directories.
 generated/
 out/
-dist/
+!dist/npm__da.js
+!dist/esm__da.js
 
 # Generated files.
 *.log
