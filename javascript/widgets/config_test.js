@@ -31,6 +31,7 @@ const stub = new PropertyReplacer();
 let testUtil;
 let errorLogMessages = [];
 let warningLogMessages = [];
+const expectedClientId = '1234567890.apps.googleusercontent.com';
 
 testSuite({
   setUp() {
@@ -310,8 +311,8 @@ testSuite({
       {
         'provider': 'google.com',
         'scopes': ['foo', 'bar'],
-        // providerName, buttonColor and iconUrl should be override with null.
-        'providerName': 'Google',
+        'providerName': 'MyIdp',
+        'fullLabel': 'MyIdp Portal',
         'buttonColor': '#FFB6C1',
         'iconUrl': '<url-of-the-icon-of-the-sign-in-button>',
       },
@@ -319,6 +320,7 @@ testSuite({
       {
         'provider': 'microsoft.com',
         'providerName': 'Microsoft',
+        'fullLabel': 'Microsoft Login',
         'buttonColor': '#FFB6C1',
         'iconUrl': '<url-of-the-icon-of-the-sign-in-button>',
         'loginHintKey': 'login_hint',
@@ -332,6 +334,10 @@ testSuite({
     assertEquals(4, providerConfigs.length);
     assertObjectEquals({
       providerId: 'google.com',
+      providerName: 'MyIdp',
+      fullLabel: 'MyIdp Portal',
+      buttonColor: '#FFB6C1',
+      iconUrl: '<url-of-the-icon-of-the-sign-in-button>',
     }, providerConfigs[0]);
     assertObjectEquals({
       providerId: 'facebook.com',
@@ -339,6 +345,7 @@ testSuite({
     assertObjectEquals({
       providerId: 'microsoft.com',
       providerName: 'Microsoft',
+      fullLabel: 'Microsoft Login',
       buttonColor: '#FFB6C1',
       iconUrl: '<url-of-the-icon-of-the-sign-in-button>',
       loginHintKey: 'login_hint',
@@ -346,6 +353,7 @@ testSuite({
     assertObjectEquals({
       providerId: 'yahoo.com',
       providerName: null,
+      fullLabel: null,
       buttonColor: null,
       iconUrl: null,
       loginHintKey: null,
@@ -357,15 +365,17 @@ testSuite({
       {
         'provider': 'google.com',
         'scopes': ['foo', 'bar'],
-        // providerName, buttonColor and iconUrl should be override with null.
-        'providerName': 'Google',
+        'providerName': 'MyIdp',
+        'fullLabel': 'MyIdp Portal',
         'buttonColor': '#FFB6C1',
         'iconUrl': '<url-of-the-icon-of-the-sign-in-button>',
+        'loginHintKey': 'other',
       },
       'facebook.com',
       {
         'provider': 'microsoft.com',
         'providerName': 'Microsoft',
+        'fullLabel': 'Microsoft Login',
         'buttonColor': '#FFB6C1',
         'iconUrl': '<url-of-the-icon-of-the-sign-in-button>',
         'loginHintKey': 'login_hint',
@@ -380,6 +390,10 @@ testSuite({
     ]);
     assertObjectEquals({
       providerId: 'google.com',
+      providerName: 'MyIdp',
+      fullLabel: 'MyIdp Portal',
+      buttonColor: '#FFB6C1',
+      iconUrl: '<url-of-the-icon-of-the-sign-in-button>',
     }, config.getConfigForProvider('google.com'));
     assertObjectEquals({
       providerId: 'facebook.com',
@@ -387,6 +401,7 @@ testSuite({
     assertObjectEquals({
       providerId: 'microsoft.com',
       providerName: 'Microsoft',
+      fullLabel: 'Microsoft Login',
       buttonColor: '#FFB6C1',
       iconUrl: '<url-of-the-icon-of-the-sign-in-button>',
       loginHintKey: 'login_hint',
@@ -395,6 +410,7 @@ testSuite({
     assertObjectEquals({
       providerId: 'yahoo.com',
       providerName: 'Yahoo',
+      fullLabel: null,
       buttonColor: '#FFB6C1',
       iconUrl: 'about:invalid#zClosurez',
       loginHintKey: null,
@@ -671,26 +687,25 @@ testSuite({
     assertNull(config.getProviderIdFromAuthMethod('unknown'));
   },
 
-  testGetGoogleYoloConfig_availableAndEnabled() {
+  testGetGoogleYoloClientId_availableAndEnabled() {
     config.update('signInOptions', [
       {
         'provider': 'google.com',
         'customParameters': {
           'prompt': 'none',
         },
-        'authMethod': 'https://accounts.google.com',
-        'clientId': '1234567890.apps.googleusercontent.com',
+        'clientId': expectedClientId,
       },
       {
         'provider': 'password',
-        'authMethod': 'googleyolo://id-and-password',
+        'clientId': 'CLIENT_ID2',
       },
       {
-        'authMethod': 'unknown',
+        'clientId': 'CLIENT_ID3',
       },
       {
         'provider': 'facebook.com',
-        // authMethod is required.
+        // Only Google client ID is used.
         'clientId': 'CLIENT_ID',
       },
     ]);
@@ -698,51 +713,38 @@ testSuite({
     config.update(
         'credentialHelper',
         Config.CredentialHelper.GOOGLE_YOLO);
-    const expectedConfig = {
-      'supportedAuthMethods': [
-        'https://accounts.google.com',
-        'googleyolo://id-and-password',
-      ],
-      'supportedIdTokenProviders': [
-        {
-          'uri': 'https://accounts.google.com',
-          'clientId': '1234567890.apps.googleusercontent.com',
-        },
-      ],
-    };
-    assertObjectEquals(expectedConfig, config.getGoogleYoloConfig());
+    assertEquals(expectedClientId, config.getGoogleYoloClientId());
   },
 
-  testGetGoogleYoloConfig_notEnabled() {
+  testGetGoogleYoloClientId_notEnabled() {
     config.update('signInOptions', [
       {
         'provider': 'google.com',
         'customParameters': {
           'prompt': 'none',
         },
-        'authMethod': 'https://accounts.google.com',
-        'clientId': '1234567890.apps.googleusercontent.com',
+        'clientId': expectedClientId,
       },
       {
         'provider': 'password',
-        'authMethod': 'googleyolo://id-and-password',
+        'clientId': 'CLIENT_ID2',
       },
       {
-        'authMethod': 'unknown',
+        'clientId': 'CLIENT_ID3',
       },
       {
         'provider': 'facebook.com',
-        // authMethod is required.
+        // Only Google client ID is used.
         'clientId': 'CLIENT_ID',
       },
     ]);
     // GOOGLE_YOLO credentialHelper not selected.
     config.update(
         'credentialHelper', Config.CredentialHelper.NONE);
-    assertNull(config.getGoogleYoloConfig());
+    assertNull(config.getGoogleYoloClientId());
   },
 
-  testGetGoogleYoloConfig_notAvailable() {
+  testGetGoogleYoloClientId_notAvailable() {
     config.update('signInOptions', [
       {
         'provider': 'google.com',
@@ -761,14 +763,13 @@ testSuite({
       },
       'github.com',
       'password',
-      // authMethod with no provider.
+      // clientId with no provider.
       {
-        'authMethod': 'unknown',
+        'clientId': 'unknown',
       },
-      // clientId with no authMethod.
       {
         'provider': 'facebook.com',
-        // authMethod is required.
+        // Only Google client ID is used.
         'clientId': 'CLIENT_ID',
       },
     ]);
@@ -776,7 +777,7 @@ testSuite({
     config.update(
         'credentialHelper',
         Config.CredentialHelper.GOOGLE_YOLO);
-    assertNull(config.getGoogleYoloConfig());
+    assertNull(config.getGoogleYoloClientId());
   },
 
   testGetPhoneAuthDefaultCountry() {
@@ -1499,6 +1500,34 @@ testSuite({
     assertTrue(config.autoUpgradeAnonymousUsers());
     // No additional error logged.
     assertArrayEquals([expectedErrorLogMessage], errorLogMessages);
+    assertArrayEquals([], warningLogMessages);
+  },
+
+  testAccountChooserWarningMessage() {
+    const expectedWarningMessage = 'AccountChooser.com will be operating ' +
+        'in "universal opt-out" mode starting July 31st, 2020, ' +
+        'it should no longer be used as a CredentialHelper. ' +
+        'Learn more at https://accountchooser.net/developers';
+    config.update(
+        'credentialHelper', Config.CredentialHelper.ACCOUNT_CHOOSER_COM);
+    assertEquals(
+        Config.CredentialHelper.ACCOUNT_CHOOSER_COM,
+        config.getCredentialHelper());
+    assertArrayEquals([expectedWarningMessage], warningLogMessages);
+
+    // Reset warnings.
+    warningLogMessages = [];
+    config.update(
+        'credentialHelper', Config.CredentialHelper.GOOGLE_YOLO);
+    assertEquals(
+        Config.CredentialHelper.GOOGLE_YOLO,
+        config.getCredentialHelper());
+    assertArrayEquals([], warningLogMessages);
+
+    // Reset warnings.
+    warningLogMessages = [];
+    config.update('credentialHelper', Config.CredentialHelper.NONE);
+    assertEquals(Config.CredentialHelper.NONE, config.getCredentialHelper());
     assertArrayEquals([], warningLogMessages);
   },
 

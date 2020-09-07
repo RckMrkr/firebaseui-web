@@ -8,6 +8,7 @@ generated/
 out/
 !dist/npm__da.js
 !dist/esm__da.js
+.firebase
 
 # Generated files.
 *.log

@@ -77,6 +77,14 @@ firebaseui.auth.widget.handler.common.acForceUiShown_ = false;
  */
 firebaseui.auth.widget.handler.common.acLoader_ = null;
 
+/**
+ * Resets accountchooser.com loader and removes global accountchooser namespace.
+ * This is useful for testing.
+ */
+firebaseui.auth.widget.handler.common.resetAcLoader = function() {
+  firebaseui.auth.widget.handler.common.acLoader_ = null;
+  goog.global['accountchooser'] = undefined;
+};
 
 /**
  * Loads the accountchooser.com client library if it is not loaded before and
@@ -1090,22 +1098,32 @@ firebaseui.auth.widget.handler.common.handleGoogleYoloCredential =
         app, component, providerId, opt_email);
     return goog.Promise.resolve(true);
   };
-  var providerId = app.getConfig().getProviderIdFromAuthMethod(
-      (credential && credential.authMethod) || null);
   // ID token credential available and supported Firebase Auth provider also
   // available.
-  if (credential && credential.idToken &&
-      providerId === firebase.auth.GoogleAuthProvider.PROVIDER_ID) {
+  if (credential &&
+      credential.credential &&
+      credential.clientId === app.getConfig().getGoogleYoloClientId()) {
     // ID token available.
     // Only Google has API to sign-in with an ID token.
     if (app.getConfig().getProviderAdditionalScopes(
             firebase.auth.GoogleAuthProvider.PROVIDER_ID).length) {
+      let email;
+      try {
+        // New one-tap API does not return the credential identitifer.
+        // Parse email from Google ID token.
+        const components  = credential.credential.split('.');
+        const payloadDecoded = JSON.parse(atob(components[1]));
+        email = payloadDecoded['email'];
+      } catch (e) {
+        // Ignore
+      }
       // Scopes available, OAuth flow with additional scopes required.
-      return signInWithProvider(providerId, credential.id);
+      return signInWithProvider(
+          firebase.auth.GoogleAuthProvider.PROVIDER_ID, email);
     } else {
       // Scopes not requested. Sign in with ID token directly.
       return signInWithCredential(firebase.auth.GoogleAuthProvider.credential(
-          credential.idToken));
+          credential.credential));
     }
   } else if (credential) {
     // Unsupported credential.
@@ -1417,19 +1435,29 @@ firebaseui.auth.widget.handler.common.handleSignInFetchSignInMethodsForEmail =
         opt_displayFullTosPpMessage);
   } else if ((signInMethods.length == 1) && (signInMethods[0] ===
       firebase.auth.EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD)) {
-    // Existing email link account.
-    firebaseui.auth.widget.handler.handle(
-        firebaseui.auth.widget.HandlerName.SEND_EMAIL_LINK_FOR_SIGN_IN,
-        app,
-        container,
-        email,
-        function() {
-          // Clicking back button goes back to sign in page.
-          firebaseui.auth.widget.handler.handle(
-              firebaseui.auth.widget.HandlerName.SIGN_IN,
-              app,
-              container);
-        });
+    if (app.getConfig().isEmailLinkSignInAllowed()) {
+      // Existing email link account.
+      firebaseui.auth.widget.handler.handle(
+          firebaseui.auth.widget.HandlerName.SEND_EMAIL_LINK_FOR_SIGN_IN,
+          app,
+          container,
+          email,
+          function() {
+            // Clicking back button goes back to sign in page.
+            firebaseui.auth.widget.handler.handle(
+                firebaseui.auth.widget.HandlerName.SIGN_IN,
+                app,
+                container);
+          });
+    } else {
+      // Email link sign-in is the only option for this user but it is not
+      // supported in the current app configuration.
+      firebaseui.auth.widget.handler.handle(
+          firebaseui.auth.widget.HandlerName.UNSUPPORTED_PROVIDER,
+          app,
+          container,
+          email);
+    }
   } else {
     // Federated Account.
     // The account exists, and is a federated identity account.

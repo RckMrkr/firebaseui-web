@@ -237,16 +237,30 @@ class Config {
           googArray.contains(
               UI_SUPPORTED_PROVIDERS,
               option['provider'])) {
-        // For built-in providers, provider display name, button color and
-        // icon URL are fixed. The login hint key is also automatically set for
-        // built-in providers that support it.
-        return {
+        // The login hint key is also automatically set for built-in providers
+        // that support it.
+        const providerConfig = {
           providerId: option['provider'],
+          // Since developers may be using G-Suite for Google sign in or
+          // want to label email/password as their own provider, we should
+          // allow customization of these attributes.
+          providerName: option['providerName'] || null,
+          fullLabel: option['fullLabel'] || null,
+          buttonColor: option['buttonColor'] || null,
+          iconUrl: option['iconUrl'] ?
+              util.sanitizeUrl(option['iconUrl']) : null,
         };
+        for (const key in providerConfig) {
+          if (providerConfig[key] === null) {
+            delete providerConfig[key];
+          }
+        }
+        return providerConfig;
       } else {
         return {
           providerId: option['provider'],
           providerName: option['providerName'] || null,
+          fullLabel: option['fullLabel'] || null,
           buttonColor: option['buttonColor'] || null,
           iconUrl: option['iconUrl'] ?
               util.sanitizeUrl(option['iconUrl']) : null,
@@ -257,37 +271,17 @@ class Config {
   }
 
   /**
-   * @return {?SmartLockRequestOptions} The googleyolo configuration options
-   * if available.
+   * @return {?string} The googleyolo configuration client ID if available.
    */
-  getGoogleYoloConfig() {
-    const supportedAuthMethods = [];
-    const supportedIdTokenProviders = [];
-    googArray.forEach(this.getSignInOptions_(), (option) => {
-      if (option['authMethod']) {
-        supportedAuthMethods.push(option['authMethod']);
-        if (option['clientId']) {
-          supportedIdTokenProviders.push({
-            'uri': option['authMethod'],
-            'clientId': option['clientId'],
-          });
-        }
-      }
-    });
-    let config = null;
-    // Ensure configuration is not empty. At least one supportedIdTokenProviders
-    // or supportedAuthMethods needs to be provided.
-    if (this.getCredentialHelper() ===
-        Config.CredentialHelper.GOOGLE_YOLO &&
-        // googleyolo will enforce that clientId is present. Delegate the check
-        // to it. Errors will be surfaced in the console.
-        supportedAuthMethods.length) {
-      config = {
-        'supportedIdTokenProviders': supportedIdTokenProviders,
-        'supportedAuthMethods': supportedAuthMethods,
-      };
+  getGoogleYoloClientId() {
+    const signInOptions = this.getSignInOptionsForProvider_(
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID);
+    if (signInOptions &&
+        signInOptions['clientId'] &&
+        this.getCredentialHelper() === Config.CredentialHelper.GOOGLE_YOLO) {
+      return signInOptions['clientId'] || null;
     }
-    return config;
+    return null;
   }
 
   /**
@@ -548,7 +542,7 @@ class Config {
           'Privacy Policy URL is missing, the link will not be displayed.');
     }
     if (tosUrl && privacyPolicyUrl) {
-      if (goog.isFunction(tosUrl)) {
+      if (typeof tosUrl === 'function') {
         return /** @type {function()} */ (tosUrl);
       } else if (typeof tosUrl === 'string') {
         return () => {
@@ -574,7 +568,7 @@ class Config {
           'Term of Service URL is missing, the link will not be displayed.');
     }
     if (tosUrl && privacyPolicyUrl) {
-      if (goog.isFunction(privacyPolicyUrl)) {
+      if (typeof privacyPolicyUrl === 'function') {
           return /** @type {function()} */ (privacyPolicyUrl);
       } else if (typeof privacyPolicyUrl === 'string') {
         return () => {
@@ -789,10 +783,7 @@ class Config {
   }
 
   /**
-   * TODO: for now, only accountchooser.com is available and all logic related
-   * to credential helper relies on it, so this method is provided for ease of
-   * use. It should be removed in the future when FirebaseUI supports several
-   * credential helpers.
+   * TODO: Remove during accountchooser.com opt-out period.
    * @return {boolean} Whether accountchooser.com is enabled.
    */
   isAccountChooserEnabled() {
@@ -812,10 +803,16 @@ class Config {
       return Config.CredentialHelper.NONE;
     }
     const credentialHelper = this.config_.get('credentialHelper');
+    if (credentialHelper === Config.CredentialHelper.ACCOUNT_CHOOSER_COM) {
+      log.warning(
+          'AccountChooser.com will be operating in "universal opt-out" mode '  +
+          'starting July 31st, 2020, ' +
+          'it should no longer be used as a CredentialHelper.' +
+          ' Learn more at https://accountchooser.net/developers');
+    }
     // Make sure the credential helper is valid.
     for (let key in Config.CredentialHelper) {
-      if (Config.CredentialHelper[key] ==
-          credentialHelper) {
+      if (Config.CredentialHelper[key] === credentialHelper) {
         // Return valid flow.
         return Config.CredentialHelper[key];
       }
@@ -931,11 +928,15 @@ Config.SignInFlow = {
  * The provider config object for generic providers.
  * providerId: The provider ID.
  * providerName: The display name of the provider.
+ * fullLabel: The full button label. If both providerName and fullLabel are
+ * provided, we will use fullLabel for long name and providerName for short
+ * name.
  * buttonColor: The color of the sign in button.
  * iconUrl: The URL of the icon on sign in button.
  * loginHintKey: The name to use for the optional login hint parameter.
  * @typedef {{
  *   providerId: string,
+ *   fullLabel: (?string|undefined),
  *   providerName: (?string|undefined),
  *   buttonColor: (?string|undefined),
  *   iconUrl: (?string|undefined),

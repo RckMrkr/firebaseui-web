@@ -30,6 +30,10 @@ interface Callbacks {
 
 interface SignInOption {
   provider: string;
+  providerName?: string;
+  fullLabel?: string;
+  buttonColor?: string;
+  iconUrl?: string;
   hd?: string|RegExp;
 }
 
@@ -122,6 +126,7 @@ declare namespace firebaseui.auth {
   }
 
   interface TenantConfig extends firebaseui.auth.Config {
+    fullLabel?: string;
     displayName?: string;
     buttonColor?: string;
     iconUrl?: string;

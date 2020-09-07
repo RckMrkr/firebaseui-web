@@ -61,8 +61,8 @@ You just need to include the following script and CSS file in the `<head>` tag
 of your page, below the initialization snippet from the Firebase Console:
 
 ```html
-<script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.js"></script>
-<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css" />
+<script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.js"></script>
+<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
 ```
 
 #### Localized Widget
@@ -71,17 +71,17 @@ Localized versions of the widget are available through the CDN. To use a localiz
 localized JS library instead of the default library:
 
 ```html
-<script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth__{LANGUAGE_CODE}.js"></script>
-<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css" />
+<script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth__{LANGUAGE_CODE}.js"></script>
+<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
 ```
 
 where `{LANGUAGE_CODE}` is replaced by the code of the language you want. For example, the French
 version of the library is available at
-`https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth__fr.js`. The list of available
+`https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth__fr.js`. The list of available
 languages and their respective language codes can be found at [LANGUAGES.md](LANGUAGES.md).
 
 Right-to-left languages also require the right-to-left version of the stylesheet, available at
-`https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth-rtl.css`, instead of the default
+`https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth-rtl.css`, instead of the default
 stylesheet. The supported right-to-left languages are Arabic (ar), Farsi (fa), and Hebrew (iw).
 
 ### Option 2: npm Module
@@ -139,9 +139,9 @@ FirebaseUI includes the following flows:
 *"One account per email address"* setting is enabled in the
 [Firebase console](https://console.firebase.google.com). This setting is enabled
 by default.)
-6. [Account Chooser](https://www.accountchooser.com/learnmore.html?lang=en) for
-remembering emails
-7. Ability to upgrade anonymous users through sign-in/sign-up
+6. Integration with
+[one-tap sign-up](https://developers.google.com/identity/one-tap/web/)
+7. Ability to upgrade anonymous users through sign-in/sign-up.
 8. Sign-in as a guest
 
 ### Configuring sign-in providers
@@ -195,8 +195,8 @@ for a more in-depth example, showcasing a Single Page Application mode.
        * TODO(DEVELOPER): Paste the initialization snippet from:
        * Firebase Console > Overview > Add Firebase to your web app. *
        ***************************************************************************************** -->
-    <script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.js"></script>
-    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css" />
+    <script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
     <script type="text/javascript">
       // FirebaseUI config.
       var uiConfig = {
@@ -362,8 +362,11 @@ FirebaseUI supports the following configuration parameters.
   The Credential Helper to use.
   See <a href="#credential-helper">Credential Helper</a>.
   <br/>
-  <em>Default:</em>
+  <em>Default (before July 31st, 2020):</em>
   <code>firebaseui.auth.CredentialHelper.ACCOUNT_CHOOSER_COM</code>
+  <br/>
+  <em>Default (after July 31st, 2020):</em>
+  <code>firebaseui.auth.CredentialHelper.NONE</code>
 </td>
 </tr>
 <tr>
@@ -452,9 +455,13 @@ When one is enabled, your users will be prompted with email addresses and
 usernames they have saved from your app or other applications.
 FirebaseUI supports the following credential helpers:
 
+- [one-tap sign-up](https://developers.google.com/identity/one-tap/web/)
 - [accountchooser.com](https://www.accountchooser.com/learnmore.html)
 
 #### accountchooser.com
+(`accountchooser.com` will be operating in "universal opt-out" mode
+starting July 31st, 2020, it should no longer be used as a `CredentialHelper`.
+Learn more at https://accountchooser.net/developers.)
 
 When [accountchooser.com](https://www.accountchooser.com/learnmore.html) is
 enabled (enabled by default), upon signing in or
@@ -463,10 +470,71 @@ website and will be able to select one of their saved accounts. You can
 disable it by specifying the value below. This feature is always disabled for
 non HTTP/HTTPS environments.
 
-|Credential Helper |Value                                                 |
-|------------------|------------------------------------------------------|
-|accountchooser.com|`firebaseui.auth.CredentialHelper.ACCOUNT_CHOOSER_COM`|
-|None (disable)    |`firebaseui.auth.CredentialHelper.NONE`               |
+#### One-tap sign-up
+
+[One-tap sign-up](https://developers.google.com/identity/one-tap/web/)
+provides seamless authentication flows to
+your users with Google's one tap sign-up and automatic sign-in APIs.
+With one tap sign-up, users are prompted to create an account with a dialog
+that's inline with FirebaseUI NASCAR screen. With just one tap, they get a
+secure, token-based, passwordless account with your service, protected by their
+Google Account. As the process is frictionless, users are much more likely to
+register.
+Returning users are signed in automatically, even when they switch devices or
+platforms, or after their session expires.
+One-tap sign-up integrates with FirebaseUI and if you request Google OAuth
+scopes, you will still get back the expected Google OAuth access token even if
+the user goes through the one-tap flow. However, in that case 'redirect' flow is
+always used even when 'popup' is specified.
+In addition, if you choose to force prompt for Google sign-in, one-tap auto
+sign-in will be automatically disabled.
+One-tap is an additive feature and is only supported in the latest evergreen
+modern browser environments.
+For more information on how to configure one-tap sign-up, refer to the
+[one-tap get started guide](https://developers.google.com/identity/one-tap/web/guides/get-google-api-clientid).
+
+The following example shows how to configure one-tap sign-up with FirebaseUI.
+Along with the corresponding one-tap `credentialHelper`, the  Google OAuth
+`clientId` has to be provided with the Firebase Google provider:
+
+```javascript
+ui.start('#firebaseui-auth-container', {
+  signInOptions: [
+    {
+      // Google provider must be enabled in Firebase Console to support one-tap
+      // sign-up.
+      provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+      // Required to enable ID token credentials for this provider.
+      // This can be obtained from the Credentials page of the Google APIs
+      // console. Use the same OAuth client ID used for the Google provider
+      // configured with GCIP or Firebase Auth.
+      clientId: 'xxxxxxxxxxxxxxxxx.apps.googleusercontent.com'
+    },
+    firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+    firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+    firebase.auth.GithubAuthProvider.PROVIDER_ID,
+    firebase.auth.EmailAuthProvider.PROVIDER_ID,
+  ],
+  // Required to enable one-tap sign-up credential helper.
+  credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO
+});
+// Auto sign-in for returning users is enabled by default except when prompt is
+// not 'none' in the Google provider custom parameters. To manually disable:
+ui.disableAutoSignIn();
+```
+
+Auto sign-in for returning users can be disabled by calling
+`ui.disableAutoSignIn()`. This may be needed if the FirebaseUI sign-in page is
+being rendered after the user signs out.
+
+To see FirebaseUI in action with one-tap sign-up, check out the FirebaseUI
+[demo app](https://fir-ui-demo-84a6c.firebaseapp.com/).
+
+|Credential Helper                 |Value                                                 |
+|----------------------------------|------------------------------------------------------|
+|accountchooser.com (deprecated)   |`firebaseui.auth.CredentialHelper.ACCOUNT_CHOOSER_COM`|
+|One-tap sign-up                   |`firebaseui.auth.CredentialHelper.GOOGLE_YOLO`        |
+|None (disable)                    |`firebaseui.auth.CredentialHelper.NONE`               |
 
 ### Available providers
 
@@ -573,6 +641,16 @@ parameters.
 </td>
 </tr>
 <tr>
+<td>fullLabel</td>
+<td>No</td>
+<td>
+  The full label of the button. Instead of "Sign in with $providerName", this
+  button label will be used.
+  <em>Default:</em>
+  <code>Sign in with $providerName</code>
+</td>
+</tr>
+<tr>
 <td>buttonColor</td>
 <td>No</td>
 <td>
@@ -626,6 +704,8 @@ ui.start('#firebaseui-auth-container', {
     {
       provider: 'microsoft.com',
       providerName: 'Microsoft',
+      // To override the full label of the button.
+      // fullLabel: 'Login with Microsoft',
       buttonColor: '#2F2F2F',
       iconUrl: '<icon-url-of-sign-in-button>',
       loginHintKey: 'login_hint',
@@ -672,6 +752,16 @@ OIDC providers' `signInOptions` support the following configuration parameters.
 </td>
 </tr>
 <tr>
+<td>fullLabel</td>
+<td>No</td>
+<td>
+  The full label of the button. Instead of "Sign in with $providerName", this
+  button label will be used.
+  <em>Default:</em>
+  <code>Sign in with $providerName</code>
+</td>
+</tr>
+<tr>
 <td>buttonColor</td>
 <td>Yes</td>
 <td>
@@ -702,8 +792,10 @@ OIDC providers' `signInOptions` support the following configuration parameters.
 ui.start('#firebaseui-auth-container', {
   signInOptions: [
     {
-      provider: 'oidc.myProvider`,
+      provider: 'oidc.myProvider',
       providerName: 'MyOIDCProvider',
+      // To override the full label of the button.
+      // fullLabel: 'Employee Login',
       buttonColor: '#2F2F2F',
       iconUrl: '<icon-url-of-sign-in-button>',
       customParameters: {
@@ -746,6 +838,16 @@ SAML providers' `signInOptions` support the following configuration parameters.
 </td>
 </tr>
 <tr>
+<td>fullLabel</td>
+<td>No</td>
+<td>
+  The full label of the button. Instead of "Sign in with $providerName", this
+  button label will be used.
+  <em>Default:</em>
+  <code>Sign in with $providerName</code>
+</td>
+</tr>
+<tr>
 <td>buttonColor</td>
 <td>Yes</td>
 <td>
@@ -771,6 +873,8 @@ ui.start('#firebaseui-auth-container', {
     {
       provider: 'saml.myProvider',
       providerName: 'MySAMLProvider',
+      // To override the full label of the button.
+      // fullLabel: 'Constractor Portal',
       buttonColor: '#2F2F2F',
       iconUrl: '<icon-url-of-sign-in-button>'
     }
@@ -1179,8 +1283,8 @@ FirebaseUI is displayed.
        * TODO(DEVELOPER): Paste the initialization snippet from:
        * Firebase Console > Overview > Add Firebase to your web app. *
        ***************************************************************************************** -->
-    <script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.js"></script>
-    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css" />
+    <script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.css" />
     <script type="text/javascript">
       // FirebaseUI config.
       var uiConfig = {
@@ -1210,7 +1314,7 @@ FirebaseUI is displayed.
             document.getElementById('loader').style.display = 'none';
           }
         },
-        credentialHelper: firebaseui.auth.CredentialHelper.ACCOUNT_CHOOSER_COM,
+        credentialHelper: firebaseui.auth.CredentialHelper.NONE,
         // Query parameter name for mode.
         queryParameterForWidgetMode: 'mode',
         // Query parameter name for sign in success url.
@@ -1405,7 +1509,7 @@ ui.start('#firebaseui-auth-container', {
 For [GCIP](https://cloud.google.com/identity-platform) customers, you can build a
 tenant-specific sign-in page with FirebaseUI. Make sure you've enabled
 multi-tenancy for your project and configured your tenants. See the
-[Multi-tenancy quickstart](https://cloud.google.com/identity-platform/docs/quickstart-multi-tenancy)
+[Multi-tenancy quickstart](https://cloud.google.com/identity-platform/docs/multi-tenancy-quickstart)
 to learn how.
 
 This feature requires [firebase](https://www.npmjs.com/package/firebase) version 6.6.0 or higher.

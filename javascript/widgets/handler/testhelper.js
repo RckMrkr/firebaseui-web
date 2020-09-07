@@ -97,16 +97,16 @@ var operationNotSupportedError = {
       'application is running on. "location.protocol" must be http, https ' +
       'or chrome-extension and web storage must be enabled.'
 };
+var googYoloClientId = '1234567890.apps.googleusercontent.com';
 // googleyolo ID token credential.
 var googleYoloIdTokenCredential = {
-  'idToken': 'ID_TOKEN',
-  'id': federatedAccount.getEmail(),
-  'authMethod': 'https://accounts.google.com'
+  'credential': 'HEADER.' +
+      btoa(JSON.stringify({email: federatedAccount.getEmail()})) + '.SIGNATURE',
+  'clientId': googYoloClientId,
 };
 // googleyolo non ID token credential.
 var googleYoloOtherCredential = {
-  'id': federatedAccount.getEmail(),
-  'authMethod': 'https://accounts.google.com'
+  'clientId': 'other',
 };
 // Mock anonymous user.
 var anonymousUser = {
@@ -889,7 +889,7 @@ function assertTosPpLinkClicked_(tosUrl, privacyPolicyUrl) {
     'firebaseui-tos-link', container);
   var ppLinkElement = goog.dom.getElementByClass(
     'firebaseui-pp-link', container);
-  if (goog.isFunction(tosUrl)) {
+  if (typeof tosUrl === 'function') {
     assertEquals(0, tosUrl.getCallCount());
     goog.testing.events.fireClickSequence(tosLinkElement);
     assertEquals(1, tosUrl.getCallCount());
@@ -897,7 +897,7 @@ function assertTosPpLinkClicked_(tosUrl, privacyPolicyUrl) {
     goog.testing.events.fireClickSequence(tosLinkElement);
     testUtil.assertOpen(tosUrl, '_blank');
   }
-  if (goog.isFunction(privacyPolicyUrl)) {
+  if (typeof privacyPolicyUrl === 'function') {
     assertEquals(0, privacyPolicyUrl.getCallCount());
     goog.testing.events.fireClickSequence(ppLinkElement);
     assertEquals(1, privacyPolicyUrl.getCallCount());

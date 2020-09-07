@@ -39,6 +39,7 @@ testSuite({
       displayMode: 'optionsFirst',
       tenants: {
         tenantId1: {
+          fullLabel: 'Contractor A Portal',
           displayName: 'Contractor A',
           buttonColor: '#FFB6C1',
           iconUrl: '<icon-url-of-sign-in-button>',
@@ -54,6 +55,7 @@ testSuite({
             {
               hd: 'sub-acme.com',
               provider: 'password',
+              fullLabel: 'Sign in as Employee',
               requireDisplayName: false,
             },
           ],
@@ -70,6 +72,7 @@ testSuite({
             {
               hd: 'ocp-supplier1.com',
               provider: 'saml.my-provider1',
+              fullLabel: 'Contractor Portal',
               providerName: 'SAML provider',
               buttonColor: '#4413AD',
               iconUrl: 'https://www.example.com/photos/my_idp/saml.png',
@@ -84,7 +87,7 @@ testSuite({
           credentialHelper: 'none',
         },
         _: {
-          displayName: 'ACME',
+          displayName: 'ACME.COM',
           buttonColor: '#53B2BF',
           iconUrl: '<icon-url-of-sign-in-button>',
           signInOptions: [
@@ -587,6 +590,7 @@ testSuite({
     assertObjectEquals(
         {
           tenantId: 'tenantId1',
+          fullLabel: 'Contractor A Portal',
           displayName: 'Contractor A',
           buttonColor: '#FFB6C1',
           iconUrl: '<icon-url-of-sign-in-button>',
@@ -602,7 +606,7 @@ testSuite({
     assertObjectEquals(
         {
           tenantId: null,
-          displayName: 'ACME',
+          displayName: 'ACME.COM',
           buttonColor: '#53B2BF',
           iconUrl: '<icon-url-of-sign-in-button>',
         },
@@ -613,6 +617,7 @@ testSuite({
     // Test that the default option first tenant selection related configs are
     // returned for arbitrary tenant if default configuration is provided.
     configObject['tenants']['*'] = {
+      fullLabel: 'Dealership Login',
       displayName: 'DEALER',
       buttonColor: '#37D2AC',
       iconUrl: '<icon-url-of-sign-in-button>',
@@ -627,6 +632,7 @@ testSuite({
     assertObjectEquals(
         {
           tenantId: 'arbitrary_tenant_id',
+          fullLabel: 'Dealership Login',
           displayName: 'DEALER',
           buttonColor: '#37D2AC',
           iconUrl: '<icon-url-of-sign-in-button>',
@@ -639,6 +645,7 @@ testSuite({
     // returned for top level project if default configuration is provided.
     delete configObject['tenants']['_'];
     configObject['tenants']['*'] = {
+      fullLabel: 'Dealership Login',
       displayName: 'DEALER',
       buttonColor: '#37D2AC',
       iconUrl: '<icon-url-of-sign-in-button>',
@@ -652,6 +659,7 @@ testSuite({
     assertObjectEquals(
         {
           tenantId: null,
+          fullLabel: 'Dealership Login',
           displayName: 'DEALER',
           buttonColor: '#37D2AC',
           iconUrl: '<icon-url-of-sign-in-button>',
